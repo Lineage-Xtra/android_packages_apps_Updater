@@ -26,6 +26,11 @@ object Constants {
     const val AB_PAYLOAD_PROPERTIES_PATH = "payload_properties.txt"
 
     /**
+     * Miscellaneous - Beta Update
+     */
+    const val PREF_BETA_UPDATES = "beta_updates"
+
+    /**
      * Miscellaneous - Legacy
      */
     const val UNCRYPT_FILE_EXT = ".uncrypt"

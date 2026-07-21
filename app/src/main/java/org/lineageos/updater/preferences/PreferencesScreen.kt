@@ -15,6 +15,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.preference.PreferenceManager
 import com.android.settingslib.spa.widget.preference.ListPreference
 import com.android.settingslib.spa.widget.preference.ListPreferenceModel
 import com.android.settingslib.spa.widget.preference.ListPreferenceOption
@@ -28,6 +29,7 @@ import org.lineageos.updater.UpdaterApplication
 import org.lineageos.updater.data.CheckInterval
 import org.lineageos.updater.data.UserPreferencesRepository
 import org.lineageos.updater.deviceinfo.DeviceInfoUtils
+import org.lineageos.updater.misc.Constants
 import org.lineageos.updater.util.BatteryMonitor
 import java.io.File
 
@@ -51,6 +53,7 @@ private fun PreferencesContent(
     isABDevice: Boolean,
     showRecoveryUpdate: Boolean,
 ) {
+    val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val abPerfMode by repository.abPerfModeFlow.collectAsStateWithLifecycle(false)
     val batteryState by batteryMonitor.batteryState.collectAsStateWithLifecycle(
@@ -65,6 +68,10 @@ private fun PreferencesContent(
     val periodicCheckEnabled by repository.periodicCheckEnabledFlow.collectAsStateWithLifecycle(true)
     var recoveryUpdateEnabled by remember { mutableStateOf(repository.getRecoveryUpdateEnabled()) }
 
+    // Beta Updates State
+    val sharedPrefs = remember { PreferenceManager.getDefaultSharedPreferences(context) }
+    var betaUpdatesEnabled by remember { mutableStateOf(sharedPrefs.getBoolean(Constants.PREF_BETA_UPDATES, false)) }
+
     val autoUpdatesCheckSummary = stringResource(R.string.menu_auto_updates_check_summary)
     val autoDeleteUpdatesSummary = stringResource(R.string.menu_auto_delete_updates_summary)
     val streamUpdatesSummary = stringResource(R.string.menu_stream_updates_summary)
@@ -72,6 +79,8 @@ private fun PreferencesContent(
     val abPerfModeSummary = stringResource(R.string.menu_ab_perf_mode_summary)
     val abPerfModeChargingSummary = stringResource(R.string.menu_ab_perf_mode_summary_charging)
     val updateRecoverySummary = stringResource(R.string.menu_update_recovery_summary)
+    val betaUpdatesTitle = stringResource(R.string.pref_beta_updates_title)
+    val betaUpdatesSummary = stringResource(R.string.pref_beta_updates_summary)
     val selectedCheckInterval = remember(checkInterval) {
         object : IntState {
             override val intValue = checkInterval.ordinal
@@ -114,6 +123,17 @@ private fun PreferencesContent(
     }
 
     Category(title = stringResource(R.string.pref_category_download_install)) {
+        // Beta Updates Toggle
+        SwitchPreference(object : SwitchPreferenceModel {
+            override val title = betaUpdatesTitle
+            override val summary = { betaUpdatesSummary }
+            override val checked = { betaUpdatesEnabled }
+            override val onCheckedChange: (Boolean) -> Unit = { value ->
+                betaUpdatesEnabled = value
+                sharedPrefs.edit().putBoolean(Constants.PREF_BETA_UPDATES, value).apply()
+            }
+        })
+
         if (isABDevice) {
             SwitchPreference(object : SwitchPreferenceModel {
                 override val title = stringResource(R.string.menu_stream_updates)

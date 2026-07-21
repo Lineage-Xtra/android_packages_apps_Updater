@@ -5,11 +5,13 @@
 package org.lineageos.updater.data.source.network
 
 import android.content.Context
+import androidx.preference.PreferenceManager
 import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.lineageos.updater.R
 import org.lineageos.updater.deviceinfo.DeviceInfoUtils
+import org.lineageos.updater.misc.Constants
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
@@ -22,9 +24,15 @@ class UpdatesNetworkDataSource(private val context: Context) {
             require(base.startsWith("https://")) {
                 "Update server URL must use HTTPS: $base"
             }
+
+            // Read the Beta Updates preference
+            val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context)
+            val betaUpdates = sharedPrefs.getBoolean(Constants.PREF_BETA_UPDATES, false)
+            val type = if (betaUpdates) "beta" else DeviceInfoUtils.releaseType.lowercase()
+
             return base
                 .replace("{device}", DeviceInfoUtils.device)
-                .replace("{type}", DeviceInfoUtils.releaseType.lowercase())
+                .replace("{type}", type)
                 .replace("{incr}", DeviceInfoUtils.buildVersionIncremental)
         }
 
